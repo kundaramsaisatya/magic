@@ -4,86 +4,163 @@ html = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Calculator</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;min-height:100%;font-family:Arial,sans-serif;background:#f7f7f9;color:#34343a}
-body{display:flex;justify-content:center}
-.app{width:100%;max-width:430px;min-height:100vh;background:#f7f7f9;display:flex;flex-direction:column}
-.setup{padding:28px 22px}
-.setup h2{font-size:25px;margin:8px 0 24px;font-weight:500}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden}
+body{
+  background:#f8f8fa;
+  color:#303036;
+  font-family:Arial,Roboto,sans-serif;
+  touch-action:manipulation;
+}
+.app{
+  width:100%;
+  height:100%;
+  max-width:430px;
+  margin:auto;
+  background:#f8f8fa;
+  display:flex;
+  flex-direction:column;
+}
+.setup{
+  padding:28px 22px;
+}
+.setup h2{font-size:25px;font-weight:400;margin:4px 0 24px}
 .setup label{display:block;font-size:14px;color:#666;margin:16px 0 7px}
-.setup input{width:100%;height:52px;border:1px solid #ddd;border-radius:12px;background:white;padding:0 14px;font-size:20px;outline:none}
-.start{width:100%;height:54px;margin-top:22px;border:0;border-radius:14px;background:#4ca000;color:white;font-size:18px;font-weight:600}
-.calc{display:flex;flex-direction:column;min-height:100vh;padding:0 18px 24px}
-.display{height:42vh;min-height:310px;max-height:600px;display:flex;flex-direction:column;justify-content:flex-end;padding:0 8px 15px}
-.expression{height:34px;text-align:right;color:#a8a8ad;font-size:20px;white-space:nowrap;overflow:hidden}
-.screen{height:76px;text-align:right;font-size:58px;font-weight:300;letter-spacing:-2px;white-space:nowrap;overflow:hidden;color:#303037}
-.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 0 4px}
-.key{height:76px;border:0;border-radius:50%;background:#fff;color:#34343a;font-size:31px;font-weight:400;box-shadow:none}
-.key:active{background:#e7e7e9}
-.operator{background:#ededee;color:#278000}
-.clear{color:#d33b3b}
-.equals{background:#51a800;color:white}
-.zero{grid-column:auto}
+.setup input{
+  width:100%;height:52px;border:1px solid #ddd;border-radius:13px;
+  background:#fff;padding:0 14px;font-size:20px;outline:none;
+}
+.start{
+  width:100%;height:54px;margin-top:22px;border:0;border-radius:14px;
+  background:#4da600;color:#fff;font-size:18px;font-weight:600;
+}
+.calc{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  padding:0 22px;
+}
+.display{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:0 8px 22px;
+}
+.expression{
+  height:30px;text-align:right;color:#b4b4b8;
+  font-size:20px;white-space:nowrap;overflow:hidden;
+}
+.screen{
+  text-align:right;color:#34343a;
+  font-size:clamp(54px,14vw,72px);
+  font-weight:300;line-height:1.05;
+  white-space:nowrap;overflow:hidden;
+}
+.keys{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+}
+.key{
+  width:100%;
+  aspect-ratio:1;
+  border:0;
+  border-radius:50%;
+  background:#fff;
+  color:#35353a;
+  font-size:clamp(27px,7.5vw,35px);
+  font-weight:400;
+  padding:0;
+}
+.key:active{background:#e5e5e7}
+.operator{background:#ededee;color:#298100}
+.clear{color:#d23b3b}
+.equals{background:#4fa800;color:white}
 .hidden{display:none!important}
-@media(max-width:360px){
- .keys{gap:8px}.key{height:65px;font-size:27px}.display{min-height:280px}.screen{font-size:48px}
+
+/* Samsung A13 portrait proportions */
+@media(min-width:390px) and (max-width:430px){
+  .calc{padding:0 27px}
+  .keys{gap:13px}
+  .display{padding-bottom:24px}
+}
+
+/* Small phones */
+@media(max-width:370px){
+  .calc{padding:0 16px}
+  .keys{gap:9px}
+  .display{padding-bottom:15px}
 }
 </style>
 </head>
 <body>
+
 <div class="app">
 
-<section id="setup" class="setup">
-  <h2>Calculator</h2>
-  <label>Target number</label>
-  <input id="target" inputmode="numeric" maxlength="12" autocomplete="off">
-  <label>Number of entries</label>
-  <input id="count" inputmode="numeric" maxlength="2" value="3" autocomplete="off">
-  <button class="start" id="start">Start</button>
-</section>
+  <section id="setup" class="setup">
+    <h2>Calculator</h2>
 
-<section id="calc" class="calc hidden">
-  <div class="display">
-    <div class="expression" id="expression"></div>
-    <div class="screen" id="screen">0</div>
-  </div>
+    <label>Target number</label>
+    <input id="target" inputmode="numeric" maxlength="12" autocomplete="off">
 
-  <div class="keys" id="keys">
-    <button class="key clear" data-k="AC">C</button>
-    <button class="key" data-k="paren">()</button>
-    <button class="key" data-k="%">%</button>
-    <button class="key operator" data-k="/">÷</button>
+    <label>Number of entries</label>
+    <input id="count" inputmode="numeric" maxlength="2" value="3" autocomplete="off">
 
-    <button class="key" data-k="7">7</button>
-    <button class="key" data-k="8">8</button>
-    <button class="key" data-k="9">9</button>
-    <button class="key operator" data-k="*">×</button>
+    <button class="start" id="start">Start</button>
+  </section>
 
-    <button class="key" data-k="4">4</button>
-    <button class="key" data-k="5">5</button>
-    <button class="key" data-k="6">6</button>
-    <button class="key operator" data-k="-">−</button>
+  <section id="calc" class="calc hidden">
 
-    <button class="key" data-k="1">1</button>
-    <button class="key" data-k="2">2</button>
-    <button class="key" data-k="3">3</button>
-    <button class="key operator" data-k="+">+</button>
+    <div class="display">
+      <div id="expression" class="expression"></div>
+      <div id="screen" class="screen">0</div>
+    </div>
 
-    <button class="key" data-k="sign">+/−</button>
-    <button class="key" data-k="0">0</button>
-    <button class="key" data-k=".">.</button>
-    <button class="key equals" data-k="=">=</button>
-  </div>
-</section>
+    <div id="keys" class="keys">
+      <button class="key clear" data-k="AC">C</button>
+      <button class="key" data-k="paren">()</button>
+      <button class="key" data-k="%">%</button>
+      <button class="key operator" data-k="/">÷</button>
+
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key operator" data-k="*">×</button>
+
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key operator" data-k="-">−</button>
+
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key operator" data-k="+">+</button>
+
+      <button class="key" data-k="sign">+/−</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key" data-k=".">.</button>
+      <button class="key equals" data-k="=">=</button>
+    </div>
+  </section>
 </div>
 
 <script>
 (() => {
-  let target=0, entryLimit=3, entryCount=0, total=0, current="";
-  let blind=false, revealReady=false, pendingBase=0, timer=null;
+  let target=0;
+  let entryLimit=3;
+  let entryCount=0;
+  let total=0;
+  let current="";
+  let blind=false;
+  let revealReady=false;
+  let pendingBase=0;
+  let timer=null;
 
   const setup=document.getElementById("setup");
   const calc=document.getElementById("calc");
@@ -92,59 +169,56 @@ body{display:flex;justify-content:center}
   const start=document.getElementById("start");
   const keys=document.getElementById("keys");
   const screen=document.getElementById("screen");
-  const expression=document.getElementById("expression");
 
   function render(){
     screen.textContent=current==="" ? "0" : current;
   }
 
-  function reset(){
-    if(timer) clearTimeout(timer);
-    target=0;entryLimit=3;entryCount=0;total=0;current="";
-    blind=false;revealReady=false;pendingBase=0;
-    expression.textContent="";
-    render();
-  }
-
   start.addEventListener("click",()=>{
     const raw=targetInput.value.trim();
-    const count=Number.parseInt(countInput.value,10);
+    const count=parseInt(countInput.value,10);
 
     if(!/^\d+$/.test(raw)||Number(raw)<=0){
       alert("Enter a numeric target.");
       return;
     }
+
     if(!Number.isInteger(count)||count<1||count>20){
       alert("Enter a number from 1 to 20.");
       return;
     }
 
-    reset();
     target=Number(raw);
     entryLimit=count;
+    entryCount=0;
+    total=0;
+    current="";
+    blind=false;
+    revealReady=false;
+    pendingBase=0;
 
     setup.classList.add("hidden");
     calc.classList.remove("hidden");
+    render();
   });
 
   keys.addEventListener("click",(event)=>{
     const button=event.target.closest("button");
-    if(!button)return;
-    press(button.dataset.k);
+    if(button) press(button.dataset.k);
   });
 
   function press(k){
-    // During the 10-second hands-on interval and automatic entry,
-    // every spectator keypad press is ignored.
-    if(blind)return;
+
+    // Hidden 10-second interval:
+    // all spectator taps are ignored.
+    if(blind) return;
 
     if(revealReady){
       if(k==="+"){
         revealReady=false;
-        expression.textContent="";
         return;
       }
-      if(k==="=")finishReveal();
+      if(k==="=") finishReveal();
       return;
     }
 
@@ -168,13 +242,12 @@ body{display:flex;justify-content:center}
       total=0;
       entryCount=0;
       render();
-      expression.textContent="";
       return;
     }
 
     if(k==="sign"){
       if(current){
-        current=current.startsWith("-")?current.slice(1):"-"+current;
+        current=current.startsWith("-") ? current.slice(1) : "-"+current;
         render();
       }
       return;
@@ -189,13 +262,12 @@ body{display:flex;justify-content:center}
       return;
     }
 
-    if(k==="paren"){
-      return;
-    }
+    // Kept visually for the calculator appearance.
+    if(k==="paren") return;
 
     if(k==="+"){
       const n=Number(current);
-      if(!Number.isFinite(n))return;
+      if(!Number.isFinite(n)) return;
 
       total+=n;
       entryCount++;
@@ -203,22 +275,20 @@ body{display:flex;justify-content:center}
       render();
 
       if(entryCount>=entryLimit){
-        beginBlindInterval();
+        beginHiddenInterval();
       }
     }
   }
 
-  function beginBlindInterval(){
+  function beginHiddenInterval(){
     const difference=target-total;
 
-    if(difference<=0){
-      return;
-    }
+    if(difference<=0) return;
 
     blind=true;
     pendingBase=total;
 
-    // Exactly 10 seconds. No overlay, message, countdown or hint.
+    // Ten seconds with absolutely no visible UI change.
     timer=setTimeout(()=>{
       autoType(String(difference));
     },10000);
@@ -228,20 +298,20 @@ body{display:flex;justify-content:center}
     current="";
     render();
 
-    let index=0;
+    let i=0;
 
-    function typeNext(){
-      if(index<value.length){
-        current+=value[index++];
+    function nextDigit(){
+      if(i<value.length){
+        current+=value[i++];
         render();
-        timer=setTimeout(typeNext,180);
+        timer=setTimeout(nextDigit,180);
       }else{
         blind=false;
         revealReady=true;
       }
     }
 
-    typeNext();
+    nextDigit();
   }
 
   function finishReveal(){
@@ -251,8 +321,6 @@ body{display:flex;justify-content:center}
     revealReady=false;
     render();
   }
-
-  render();
 })();
 </script>
 </body>
@@ -260,4 +328,4 @@ body{display:flex;justify-content:center}
 
 path = Path("/mnt/data/index.html")
 path.write_text(html, encoding="utf-8")
-print(f"Created: {path}")
+print(path)
